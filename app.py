@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import requests
 import json
+import datetime
 
 
 def get_api_data(stock, days):
@@ -35,8 +36,20 @@ def process_data(json, array, value):
     # Example of getting data
     # for close in response_data['data']:
     #     close_values.append(float(close['Close']))
-    for value in json['data']:
-        array.append(value['Close'])
+
+    # Converting Epoch to Datetime is not working.
+    # Seems like the int 'epoch' isn't being passed before the datetime function is being called
+    # causing OSError: [Errno 22] Invalid argument
+    # Possible fix: pandas has a way to convert epoch to datetime. Haven't tried it out yet.
+
+    # if value == 'Date':
+    #     for i in json['data']:
+    #         epoch = int(i[value])
+    #         date = datetime.datetime.fromtimestamp(epoch).strftime('%Y-%m-%d')
+    #         array.append(date)
+    # else:
+    for i in json['data']:
+        array.append(float(i[value]))
 
 
 def main():
@@ -55,8 +68,13 @@ def main():
     high_values, low_values = [], []
     date_values = []
 
-    process_data(response_data, close_values, "'Close'")
-    print(close_values)
+    process_data(response_data, close_values, 'Close')
+    process_data(response_data, open_values, 'Open')
+    process_data(response_data, high_values, 'High')
+    process_data(response_data, low_values, 'Low')
+    process_data(response_data, date_values, 'Date')
+
+    print(date_values)
 
     # Streamlit
     st.title("CAP 4104 Project")
@@ -65,6 +83,8 @@ def main():
     # Dates seem to use Epoch Unix Timestamp
     data_table1 = pd.DataFrame(response_data['data'])
     st.write(data_table1)
+
+    # st.line_chart()
 
 
 if __name__ == '__main__':
