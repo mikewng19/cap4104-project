@@ -3,7 +3,6 @@ import pandas as pd
 import numpy as np
 import requests
 import json
-import datetime
 
 
 def get_api_data(stock, days):
@@ -29,27 +28,16 @@ def get_api_data(stock, days):
 
 
 def process_data(json, array, value):
-    # Currently unused
-    # response_length = (len(response_data['data'][0]) - 1)
-    # print("JSON Length: ", response_length)
-
     # Example of getting data
     # for close in response_data['data']:
     #     close_values.append(float(close['Close']))
 
-    # Converting Epoch to Datetime is not working.
-    # Seems like the int 'epoch' isn't being passed before the datetime function is being called
-    # causing OSError: [Errno 22] Invalid argument
-    # Possible fix: pandas has a way to convert epoch to datetime. Haven't tried it out yet.
-
-    # if value == 'Date':
-    #     for i in json['data']:
-    #         epoch = int(i[value])
-    #         date = datetime.datetime.fromtimestamp(epoch).strftime('%Y-%m-%d')
-    #         array.append(date)
-    # else:
-    for i in json['data']:
-        array.append(float(i[value]))
+    if value == 'Date':
+        for obj in json['data']:
+            array.append(int(obj[value]))
+    else:
+        for obj in json['data']:
+            array.append(float(obj[value]))
 
 
 def main():
@@ -61,8 +49,10 @@ def main():
     response_data = open("test.json")
     response_data = json.load(response_data)
 
-    # Example of accessing data:
-    # response_data['data'][0]['Close']
+    # Currently unused: Getting the length of total json objects.
+    # response_length = (len(response_data['data'][0]) - 1)
+    # print("JSON Length: ", response_length)
+
     # Storing response data in arrays.
     close_values, open_values = [], []
     high_values, low_values = [], []
@@ -74,17 +64,15 @@ def main():
     process_data(response_data, low_values, 'Low')
     process_data(response_data, date_values, 'Date')
 
-    print(date_values)
+    # Convert Epoch Unix (ms) to Datetime.
+    date_values = pd.to_datetime(date_values, unit='ms')
 
     # Streamlit
     st.title("CAP 4104 Project")
     st.header("Yahoo API")
 
-    # Dates seem to use Epoch Unix Timestamp
     data_table1 = pd.DataFrame(response_data['data'])
     st.write(data_table1)
-
-    # st.line_chart()
 
 
 if __name__ == '__main__':
