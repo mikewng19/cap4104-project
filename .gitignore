@@ -4,8 +4,8 @@ __pycache__/
 *$py.class
 
 # ignore json api key
-yahoo_api.json
-
+csse_api.json
+vaccovid_api.json
 # C extensions
 *.so
 

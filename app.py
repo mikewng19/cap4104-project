@@ -1,3 +1,4 @@
+# Author: Michael Wong
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -5,74 +6,134 @@ import requests
 import json
 
 
-def get_api_data(stock, days):
-    # https://rapidapi.com/collection/list-of-free-apis
+def get_csse_data(user_choice):
+    # Log: May implement an option to allow a user to specific a custom country.
+    # API Used: https://rapidapi.com/axisbits-axisbits-default/api/covid-19-statistics/
 
     # Load API key
-    yahoo_api = open("yahoo_api.json")
-    yahoo_api = json.load(yahoo_api)  # dictionary
-    api_key = yahoo_api["api_key"]  # string
+    csse = open("csse_api.json")
+    csse = json.load(csse)  # dictionary
+    api_key = csse["api_key"]  # string
 
-    # API Request Information
-    url = "https://yahoo-finance97.p.rapidapi.com/price"
+    url = "https://covid-19-statistics.p.rapidapi.com/reports"
 
-    # The user may specify the stock name and the amount of days.
-    payload = "symbol=" + str(stock) + "&period=" + str(days) + "d"
     headers = {
-        "content-type": "application/x-www-form-urlencoded",
         "X-RapidAPI-Key": api_key,
-        "X-RapidAPI-Host": "yahoo-finance97.p.rapidapi.com"
+        "X-RapidAPI-Host": "covid-19-statistics.p.rapidapi.com"
     }
 
-    return requests.request("POST", url, data=payload, headers=headers).json()
-
-
-def process_data(json, array, value):
-    # Example of getting data
-    # for close in response_data['data']:
-    #     close_values.append(float(close['Close']))
-
-    if value == 'Date':
-        for obj in json['data']:
-            array.append(int(obj[value]))
+    if(user_choice == "country"):
+        querystring = {"region_name": "US", "iso": "USA"}
     else:
-        for obj in json['data']:
-            array.append(float(obj[value]))
+        try:
+            querystring = {"q": "US " + str(user_choice), "region_name": "US", "iso": "USA"}
+        except ValueError:
+            print("Oops!  State does not exist.")
+
+    return requests.request("GET", url, headers=headers, params=querystring).json()
+
+
+def get_vaccovid_data():
+    # Log: May implement an option to allow a user to specific a custom country.
+    # API Used: https://rapidapi.com/vaccovidlive-vaccovidlive-default/api/vaccovid-coronavirus-vaccine-and-treatment-tracker/
+    vaccovid = open("vaccovid_api.json")
+    csse = json.load(vaccovid)  # dictionary
+    api_key = csse["api_key"]  # string
+    # API only returns around 29 days instead of 6 months.
+    url = "https://vaccovid-coronavirus-vaccine-and-treatment-tracker.p.rapidapi.com/api/covid-ovid-data/sixmonth/USA"
+
+    headers = {
+        "X-RapidAPI-Key": api_key,
+        "X-RapidAPI-Host": "vaccovid-coronavirus-vaccine-and-treatment-tracker.p.rapidapi.com"
+    }
+
+    return requests.request("GET", url, headers=headers).json()
+
+
+def process_csse(json, array, value, user_choice):
+    # Log: May implement an option to allow a user to specific a custom country.
+    if(user_choice == "city"):
+        for obj in json['data'][0]['region']['cities']:
+            if(obj[value] is not None):
+                array.append(float(obj[value]))
+    elif(user_choice == "country"):
+        for i in range(0, len(json['data'][0]['region']['cities'])):
+            for j in range(0, len(json['data'][i]['region']['cities'])):
+                if(json['data'][i]['region']['cities'][j][value] is not None):
+                    array.append(
+                        float(json['data'][i]['region']['cities'][j][value]))
+
+
+def process_vaccovid(json, array, value):
+    if value == 'date':
+        for obj in json:
+            array.append(str(obj[value]))
+    else:
+        for obj in json:
+            if(obj[value] is not None):
+                array.append(int(obj[value]))
 
 
 def main():
-    # U.S. markets, regular trading sessions run from 9:30 a.m. to 4:00 p.m. Eastern
+
     # Temporary method of storing/caching API Data into A json file. (This will reduce the amount of API calls needed.)
-    # with open("test.json", "w") as write_file:
-    #     json.dump(get_api_data("AMD", 7), write_file)
+    # with open("csse_data.json", "w") as write_file:
+    #     json.dump(get_csse_data("country"), write_file)
 
-    response_data = open("test.json")
-    response_data = json.load(response_data)
+    # with open("vaccovid_data.json", "w") as write_file:
+    #     json.dump(get_vaccovid_data(), write_file)
 
-    # Currently unused: Getting the length of total json objects.
-    # response_length = (len(response_data['data'][0]) - 1)
-    # print("JSON Length: ", response_length)
+    # Load json data
+    csse_data = open("csse_data.json")
+    csse_data = json.load(csse_data)
 
-    # Storing response data in arrays.
-    close_values, open_values = [], []
-    high_values, low_values = [], []
-    date_values = []
+    vaccovid_data = open("vaccovid_data.json")
+    vaccovid_data = json.load(vaccovid_data)
 
-    process_data(response_data, close_values, 'Close')
-    process_data(response_data, open_values, 'Open')
-    process_data(response_data, high_values, 'High')
-    process_data(response_data, low_values, 'Low')
-    process_data(response_data, date_values, 'Date')
+    # Getting longitude and latitue for the map
+    longitude, latitude = [], []
 
-    # Convert Epoch Unix (ms) to Datetime.
-    date_values = pd.to_datetime(date_values, unit='ms')
+    process_csse(csse_data, longitude, 'long', "country")
+    process_csse(csse_data, latitude, 'lat', "country")
+    cords = np.column_stack((latitude, longitude))
 
-    # Streamlit
+    # Getting the US's past (API only returns around 29 days instead of 6 months.) of covid data.
+    total_cases, total_deaths = [], []
+    new_cases, new_deaths = [], []
+    date = []
+
+    process_vaccovid(vaccovid_data, total_cases, 'total_cases')
+    process_vaccovid(vaccovid_data, total_deaths, 'total_deaths')
+    process_vaccovid(vaccovid_data, new_cases, 'new_cases')
+    process_vaccovid(vaccovid_data, date, 'date')
+
+    ###################### Streamlit ######################
     st.title("CAP 4104 Project")
-    st.header("Yahoo API")
+    st.header("COVID-19 Dashboard")
 
-    data_table1 = pd.DataFrame(response_data['data'])
+    # Table
+    
+    # City data test
+    city_data = get_csse_data("Florida")
+    st.header("COVID-19 Table:  " +
+              str(city_data['data'][0]['region']['province']))
+
+    # data_table1 = pd.DataFrame(csse_data['data'])
+
+    data_table1 = pd.DataFrame(city_data['data'][0]['region']['cities'])
     st.write(data_table1)
+
+    # Map
+    st.header(
+        "Data Availability Map for Table [USA]")
+    df_map = pd.DataFrame(cords, columns=['latitude', 'longitude'])
+    st.map(df_map)
+
+    # Charts
+    st.header("New Cases [USA]")
+
+    df_chart1 = pd.DataFrame(new_cases)
+    st.line_chart(df_chart1)
 
 
 if __name__ == '__main__':
