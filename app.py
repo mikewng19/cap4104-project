@@ -150,25 +150,22 @@ def main():
 
     st.warning("Disclaimer: Data may be inaccurate.", icon="⚠️")
     st.info('Dates start one day behind to compensate for API update frequency.', icon="ℹ️")
+
     # Load list of all the states in the US. Even including Puerto Rico (US Territory).
     try:
         states = np.genfromtxt('states.csv', dtype='str', delimiter=',')
     except:
         st.error('Error: Failed to load states.txt', icon="🚨")
-
     # Button
     if st.button("Show API's Used"):
         st.write("COVID-19 Statistics by Axisbits:  \nhttps://rapidapi.com/axisbits-axisbits-default/api/covid-19-statistics/")
         st.write("VACCOVID - coronavirus, vaccine and treatment tracker by vaccovidlive:  \nhttps://rapidapi.com/vaccovidlive-vaccovidlive-default/api/vaccovid-coronavirus-vaccine-and-treatment-tracker/")
 
     # Table
-    
     d = st.date_input("Select a date: ", datetime.today() - timedelta(days=1))
-    option = st.selectbox ("Select a State/Territory: ", states)
+    option = st.selectbox("Select a State/Territory: ", states)
     city_data = get_csse_data(option, "state", d)
     data_table1 = None
-
-    # option = st.selectbox("Select a State", )
 
     try:
         st.header("COVID-19 Table:  " +
