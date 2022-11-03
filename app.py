@@ -183,9 +183,9 @@ def main():
     df_map = pd.DataFrame(cords, columns=['latitude', 'longitude'])
     st.map(df_map)
 
-        # Charts
+            # Charts
     st.header("New Cases [USA]")
-        
+
     line_chart = pd.DataFrame(new_cases)
     st.line_chart(line_chart)
 
