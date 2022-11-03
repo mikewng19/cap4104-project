@@ -26,7 +26,8 @@ def get_csse_data(state, location_type, date):
             "X-RapidAPI-Host": "covid-19-statistics.p.rapidapi.com"
         }
         if location_type == "state":
-            querystring = {"date": str(date), "iso": "USA","region_province": str(state)}
+            querystring = {"date": str(
+                date), "iso": "USA", "region_province": str(state)}
         elif location_type == "country":
             querystring = {"date": str(date), "iso": "USA"}
         response = requests.request(
@@ -83,6 +84,7 @@ def process_csse_map(json, array, value):
                         float(json['data'][i]['region']['cities'][j][value]))
     except:
         st.error('CSSE Data Map: Failed', icon="🚨")
+
 
 def process_vaccovid(json, array, value):
     if value == 'date':
@@ -142,13 +144,17 @@ def main():
     process_vaccovid(vaccovid_usa_data, new_deaths, 'new_deaths')
     process_vaccovid(vaccovid_usa_data, date, 'date')
 
-    city_data = get_csse_data("Florida", "state", search_date)
-
     ###################### Streamlit ######################
     st.title("CAP 4104 Project")
     st.header("Welcome to the COVID 19 Dashboard!")
 
     st.warning("Disclaimer: Data may be inaccurate.", icon="⚠️")
+    st.info('Dates start one day behind to compensate for API update frequency.', icon="ℹ️")
+    # Load list of all the states in the US. Even including Puerto Rico (US Territory).
+    try:
+        states = np.genfromtxt('states.csv', dtype='str', delimiter=',')
+    except:
+        st.error('Error: Failed to load states.txt', icon="🚨")
 
     # Button
     if st.button("Show API's Used"):
@@ -156,15 +162,23 @@ def main():
         st.write("VACCOVID - coronavirus, vaccine and treatment tracker by vaccovidlive:  \nhttps://rapidapi.com/vaccovidlive-vaccovidlive-default/api/vaccovid-coronavirus-vaccine-and-treatment-tracker/")
 
     # Table
-    d = st.date_input("Select a date: ", datetime.today())
-    st.header("COVID-19 Table:  " +
-              str(city_data['data'][0]['region']['province']))
+    
+    d = st.date_input("Select a date: ", datetime.today() - timedelta(days=1))
+    option = st.selectbox ("Select a State/Territory: ", states)
+    city_data = get_csse_data(option, "state", d)
+    data_table1 = None
 
-    data_table1 = pd.DataFrame(city_data['data'][0]['region']['cities'])
-    st.write(data_table1)
+    # option = st.selectbox("Select a State", )
 
- 
-   
+    try:
+        st.header("COVID-19 Table:  " +
+                  str(city_data['data'][0]['region']['province']))
+        data_table1 = pd.DataFrame(city_data['data'][0]['region']['cities'])
+    except:
+        st.error('Error: No data exists for this date.', icon="🚨")
+    finally:
+        st.write(data_table1)
+
     # Map
     st.header(
         "Data Availability Map for Table [USA]")
