@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 import requests
 import json
+import plotly.express as px
 
 
 def get_csse_data(user_choice):
@@ -143,7 +144,7 @@ def main():
     st.title("CAP 4104 Project")
     st.header("Welcome to the COVID 19 Dashboard!")
 
-    if st.button('Enter Dashboard'):
+    if 1==1:
         st.warning("Note: Data may not be accurate.", icon="⚠️")
 
         # Table
@@ -164,14 +165,28 @@ def main():
 
         # Charts
         st.header("New Cases [USA]")
-
+        
         line_chart = pd.DataFrame(new_cases)
         st.line_chart(line_chart)
+
+        color = st.color_picker("Pick a color","#00f900")
+        fig = px.line(
+            line_chart,
+            x = date,
+            y = new_cases
+        )
+        fig.update_traces(line_color=color)
+        st.plotly_chart(fig,use_container_width=True)
+        
 
         st.header("New Deaths [USA]")
         bar_chart = pd.DataFrame(new_deaths)
         st.bar_chart(bar_chart)
 
+        
+        bar_chart = px.bar(bar_chart, x=date, y=new_deaths)
+        if st.checkbox("Go to Bar Graph"):
+            bar_chart.show()
 
 if __name__ == '__main__':
     main()
