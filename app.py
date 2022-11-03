@@ -150,7 +150,8 @@ def main():
     st.header("Welcome to the COVID 19 Dashboard!")
 
     st.warning("Disclaimer: Data may be inaccurate.", icon="⚠️")
-    st.info('Dates start one day behind to compensate for API update frequency.', icon="ℹ️")
+    st.info(
+        'Dates start one day behind to compensate for API update frequency.', icon="ℹ️")
 
     # Load list of all the states in the US. Even including Puerto Rico (US Territory).
     try:
@@ -183,39 +184,34 @@ def main():
     df_map = pd.DataFrame(cords, columns=['latitude', 'longitude'])
     st.map(df_map)
 
-            # Charts
+    # Charts
     st.header("New Cases [USA]")
 
     line_chart = pd.DataFrame(new_cases)
     st.line_chart(line_chart)
 
-    color = st.color_picker("Pick a color","#00f900")
+    color = st.color_picker("Pick a color", "#00f900")
     fig = px.line(
-            line_chart,
-            x = date,
-            y = new_cases
-        )
+        line_chart,
+        x=date,
+        y=new_cases
+    )
     fig.update_traces(line_color=color)
-    st.plotly_chart(fig,use_container_width=True)
-        
+    st.plotly_chart(fig, use_container_width=True)
 
-    st.header("New Deaths [USA]")
-    bar_chart = pd.DataFrame(new_deaths)
-    st.bar_chart(bar_chart)
     # Charts
     st.header("New Cases [USA]")
-
     area_chart = pd.DataFrame(new_cases)
     st.area_chart(area_chart)
 
     st.header("New Deaths [USA]")
     bar_chart = pd.DataFrame(new_deaths)
     st.bar_chart(bar_chart)
-
-        
+    
     bar_chart = px.bar(bar_chart, x=date, y=new_deaths)
     if st.checkbox("Go to Bar Graph"):
         bar_chart.show()
+
 
 if __name__ == '__main__':
     main()

@@ -2,3 +2,5 @@ streamlit
 numpy
 pandas
 jmespath
+plotly
+plotly.express
