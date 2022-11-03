@@ -4,20 +4,16 @@ import pandas as pd
 import numpy as np
 import requests
 import json
+import jmespath
 
 
-def get_csse_data(user_choice):
+def get_csse_data(country, state, location_type):
     # Log: May implement an option to allow a user to specific a custom country.
     # API Used: https://rapidapi.com/axisbits-axisbits-default/api/covid-19-statistics/
     response = None
     successful = None
     url = "https://covid-19-statistics.p.rapidapi.com/reports"
 
-    if(user_choice == "country"):
-        querystring = {"region_name": "US", "iso": "USA"}
-    else:
-        querystring = {"q": "US " +
-                       str(user_choice), "region_name": "US", "iso": "USA"}
     try:
         # Load API key
         csse = open("csse_api.json")
@@ -28,8 +24,16 @@ def get_csse_data(user_choice):
             "X-RapidAPI-Key": api_key,
             "X-RapidAPI-Host": "covid-19-statistics.p.rapidapi.com"
         }
+
+        if (location_type == "state"):
+            querystring = {"q": str(state), "iso": str(country)}
+        elif(location_type == "country"):
+            querystring = {"iso": str(country)}
+        elif(location_type == "world"):
+            querystring = {}
         response = requests.request(
             "GET", url, headers=headers, params=querystring)
+
     except:
         st.error('CSSE API Response: Failed', icon="🚨")
         successful = False
@@ -39,20 +43,21 @@ def get_csse_data(user_choice):
         return response.json()
 
 
-def get_vaccovid_data():
+def get_vaccovid_data(country):
     # Log: May implement an option to allow a user to specific a custom country.
     # API Used: https://rapidapi.com/vaccovidlive-vaccovidlive-default/api/vaccovid-coronavirus-vaccine-and-treatment-tracker/
     # API only returns around 29 days instead of 6 months.
     response = None
     successful = None
 
-    url = "https://vaccovid-coronavirus-vaccine-and-treatment-tracker.p.rapidapi.com/api/covid-ovid-data/sixmonth/USA"
+    url = "https://vaccovid-coronavirus-vaccine-and-treatment-tracker.p.rapidapi.com/api/covid-ovid-data/sixmonth/" + \
+        str(country)
 
     try:
         # Load API key
         vaccovid = open("vaccovid_api.json")
-        csse = json.load(vaccovid)  # dictionary
-        api_key = csse["api_key"]  # string
+        vaccovid = json.load(vaccovid)  # dictionary
+        api_key = vaccovid["api_key"]  # string
         headers = {
             "X-RapidAPI-Key": api_key,
             "X-RapidAPI-Host": "vaccovid-coronavirus-vaccine-and-treatment-tracker.p.rapidapi.com"
@@ -68,18 +73,16 @@ def get_vaccovid_data():
         return response.json()
 
 
-def process_csse(json, array, value, user_choice):
-    # Log: May implement an option to allow a user to specific a custom country.
-    if(user_choice == "city"):
-        for obj in json['data'][0]['region']['cities']:
-            if(obj[value] is not None):
-                array.append(float(obj[value]))
-    elif(user_choice == "country"):
-        for i in range(0, len(json['data'][0]['region']['cities'])):
-            for j in range(0, len(json['data'][i]['region']['cities'])):
-                if(json['data'][i]['region']['cities'][j][value] is not None):
-                    array.append(
-                        float(json['data'][i]['region']['cities'][j][value]))
+def process_csse_map(json, array, value):
+    # Possbile paths for world data.
+    # country = jmespath.search("data[*].region." + str(value), json)
+    # cities = jmespath.search("data[*].region.cities[*]." + str(value), json)
+
+    for i in range(0, len(json['data'])):
+        for j in range(0, len(json['data'][i]['region']['cities'])):
+            if(json['data'][i]['region']['cities'][j][value] is not None):
+                array.append(
+                    float(json['data'][i]['region']['cities'][j][value]))
 
 
 def process_vaccovid(json, array, value):
@@ -93,38 +96,35 @@ def process_vaccovid(json, array, value):
 
 
 def main():
-
-    # Temporary method of storing/caching API Data into A json file. (This will reduce the amount of API calls needed.)
-    # Uncomment these lines you want to store data.
-
+    # Call and store API response into a JSON file. (This will reduce the amount of API calls needed.)
     # with open("csse_data.json", "w") as write_file:
-    #     json.dump(get_csse_data("country"), write_file)
+    #     json.dump(get_csse_data("USA","","country"), write_file)
 
     # with open("vaccovid_data.json", "w") as write_file:
-    #     json.dump(get_vaccovid_data(), write_file)
+    #     json.dump(get_vaccovid_data("USA"), write_file)
 
-    # Load json data
-    # try:
-    #     csse_map_data = open("csse_data.json")
-    #     csse_map_data = json.load(csse_data)
-    # except:
-    #     st.error('Error: Failed to load CSSE API Response JSON', icon="🚨")
+    try:
+        csse_map_data = open("csse_data.json")
+        csse_map_data = json.load(csse_map_data)
+    except:
+        st.error('Error: Failed to load CSSE API Response JSON', icon="🚨")
 
-    # try:
-    #     vaccovid_usa_data = open("vaccovid_data.json")
-    #     vaccovid_usa_data = json.load(vaccovid_data)
-    # except:
-    #     st.error('Error: Failed to load VACCOVID API Response JSON', icon="🚨")
+    try:
+        vaccovid_usa_data = open("vaccovid_data.json")
+        vaccovid_usa_data = json.load(vaccovid_usa_data)
+    except:
+        st.error('Error: Failed to load VACCOVID API Response JSON', icon="🚨")
 
-    # Store API Response in variables 
-    csse_map_data = get_csse_data("country")
-    vaccovid_usa_data = get_vaccovid_data()
+    # Call and store API response in variables
+    # csse_map_data = get_csse_data("USA", "", "country")
+    # vaccovid_usa_data = get_vaccovid_data("USA")
 
     # Getting longitude and latitue for the map
-    longitude, latitude = [], []
+    latitude, longitude = [], []
 
-    process_csse(csse_map_data, longitude, 'long', "country")
-    process_csse(csse_map_data, latitude, 'lat', "country")
+    process_csse_map(csse_map_data, latitude, 'lat')
+    process_csse_map(csse_map_data, longitude, 'long')
+
     cords = np.column_stack((latitude, longitude))
 
     # Getting the US's past (API only returns around 29 days instead of 6 months.) of covid data.
@@ -138,39 +138,43 @@ def main():
     process_vaccovid(vaccovid_usa_data, new_deaths, 'new_deaths')
     process_vaccovid(vaccovid_usa_data, date, 'date')
 
-    ###################### Streamlit ######################
+    city_data = get_csse_data("USA", "Florida", "state")
 
+    ###################### Streamlit ######################
     st.title("CAP 4104 Project")
     st.header("Welcome to the COVID 19 Dashboard!")
 
-    if st.button('Enter Dashboard'):
-        st.warning("Note: Data may not be accurate.", icon="⚠️")
+    st.warning("Disclaimer: Data may be inaccurate.", icon="⚠️")
 
-        # Table
-        city_data = get_csse_data("Florida")
-        st.header("COVID-19 Table:  " +
-                  str(city_data['data'][0]['region']['province']))
+    # Button
+    if st.button("Show API's Used"):
+        st.write("COVID-19 Statistics by Axisbits:  \nhttps://rapidapi.com/axisbits-axisbits-default/api/covid-19-statistics/")
+        st.write("VACCOVID - coronavirus, vaccine and treatment tracker by vaccovidlive:  \nhttps://rapidapi.com/vaccovidlive-vaccovidlive-default/api/vaccovid-coronavirus-vaccine-and-treatment-tracker/")
 
-        data_table1 = pd.DataFrame(city_data['data'][0]['region']['cities'])
+    # Table
+    st.header("COVID-19 Table:  " +
+              str(city_data['data'][0]['region']['province']))
 
-        st.write(data_table1)
-        st.empty()
+    data_table1 = pd.DataFrame(city_data['data'][0]['region']['cities'])
 
-        # Map
-        st.header(
-            "Data Availability Map for Table [USA]")
-        df_map = pd.DataFrame(cords, columns=['latitude', 'longitude'])
-        st.map(df_map)
+    st.write(data_table1)
+    st.empty()
 
-        # Charts
-        st.header("New Cases [USA]")
+    # Map
+    st.header(
+        "Data Availability Map for Table [USA]")
+    df_map = pd.DataFrame(cords, columns=['latitude', 'longitude'])
+    st.map(df_map)
 
-        line_chart = pd.DataFrame(new_cases)
-        st.line_chart(line_chart)
+    # Charts
+    st.header("New Cases [USA]")
 
-        st.header("New Deaths [USA]")
-        bar_chart = pd.DataFrame(new_deaths)
-        st.bar_chart(bar_chart)
+    line_chart = pd.DataFrame(new_cases)
+    st.line_chart(line_chart)
+
+    st.header("New Deaths [USA]")
+    bar_chart = pd.DataFrame(new_deaths)
+    st.bar_chart(bar_chart)
 
 
 if __name__ == '__main__':
