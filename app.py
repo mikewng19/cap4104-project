@@ -5,13 +5,14 @@ import numpy as np
 import requests
 import json
 import jmespath
+from datetime import datetime, timedelta
 
 
-def get_csse_data(country, state, location_type):
+def get_csse_data(state, location_type, date):
     # Log: May implement an option to allow a user to specific a custom country.
     # API Used: https://rapidapi.com/axisbits-axisbits-default/api/covid-19-statistics/
     response = None
-    successful = None
+    error = False
     url = "https://covid-19-statistics.p.rapidapi.com/reports"
 
     try:
@@ -24,21 +25,18 @@ def get_csse_data(country, state, location_type):
             "X-RapidAPI-Key": api_key,
             "X-RapidAPI-Host": "covid-19-statistics.p.rapidapi.com"
         }
-
-        if (location_type == "state"):
-            querystring = {"q": str(state), "iso": str(country)}
-        elif(location_type == "country"):
-            querystring = {"iso": str(country)}
-        elif(location_type == "world"):
-            querystring = {}
+        if location_type == "state":
+            querystring = {"date": str(date), "iso": "USA","region_province": str(state)}
+        elif location_type == "country":
+            querystring = {"date": str(date), "iso": "USA"}
         response = requests.request(
             "GET", url, headers=headers, params=querystring)
 
     except:
         st.error('CSSE API Response: Failed', icon="🚨")
-        successful = False
+        error = True
 
-    if successful is not False:
+    if not error:
         st.success('CSSE API Response: Successful', icon="✅")
         return response.json()
 
@@ -48,7 +46,7 @@ def get_vaccovid_data(country):
     # API Used: https://rapidapi.com/vaccovidlive-vaccovidlive-default/api/vaccovid-coronavirus-vaccine-and-treatment-tracker/
     # API only returns around 29 days instead of 6 months.
     response = None
-    successful = None
+    error = False
 
     url = "https://vaccovid-coronavirus-vaccine-and-treatment-tracker.p.rapidapi.com/api/covid-ovid-data/sixmonth/" + \
         str(country)
@@ -65,10 +63,10 @@ def get_vaccovid_data(country):
 
         response = requests.request("GET", url, headers=headers)
     except:
-        successful = False
+        error = True
         st.error('VACCOVID API Response: Failed', icon="🚨")
 
-    if successful is not False:
+    if not error:
         st.success('VACCOVID API Response: Successful', icon="✅")
         return response.json()
 
@@ -77,13 +75,14 @@ def process_csse_map(json, array, value):
     # Possbile paths for world data.
     # country = jmespath.search("data[*].region." + str(value), json)
     # cities = jmespath.search("data[*].region.cities[*]." + str(value), json)
-
-    for i in range(0, len(json['data'])):
-        for j in range(0, len(json['data'][i]['region']['cities'])):
-            if(json['data'][i]['region']['cities'][j][value] is not None):
-                array.append(
-                    float(json['data'][i]['region']['cities'][j][value]))
-
+    try:
+        for i in range(0, len(json['data'])):
+            for j in range(0, len(json['data'][i]['region']['cities'])):
+                if(json['data'][i]['region']['cities'][j][value] is not None):
+                    array.append(
+                        float(json['data'][i]['region']['cities'][j][value]))
+    except:
+        st.error('CSSE Data Map: Failed', icon="🚨")
 
 def process_vaccovid(json, array, value):
     if value == 'date':
@@ -96,13 +95,18 @@ def process_vaccovid(json, array, value):
 
 
 def main():
+    # Date is one day behind to prevent any errors.
+    search_date = datetime.today() - timedelta(days=1)
+    search_date = search_date.strftime('%Y-%m-%d')
+
     # Call and store API response into a JSON file. (This will reduce the amount of API calls needed.)
     # with open("csse_data.json", "w") as write_file:
-    #     json.dump(get_csse_data("USA","","country"), write_file)
+    #     json.dump(get_csse_data(None, "country", search_date), write_file)
 
     # with open("vaccovid_data.json", "w") as write_file:
     #     json.dump(get_vaccovid_data("USA"), write_file)
 
+    # Load from Files
     try:
         csse_map_data = open("csse_data.json")
         csse_map_data = json.load(csse_map_data)
@@ -138,7 +142,7 @@ def main():
     process_vaccovid(vaccovid_usa_data, new_deaths, 'new_deaths')
     process_vaccovid(vaccovid_usa_data, date, 'date')
 
-    city_data = get_csse_data("USA", "Florida", "state")
+    city_data = get_csse_data("Florida", "state", search_date)
 
     ###################### Streamlit ######################
     st.title("CAP 4104 Project")
@@ -152,14 +156,15 @@ def main():
         st.write("VACCOVID - coronavirus, vaccine and treatment tracker by vaccovidlive:  \nhttps://rapidapi.com/vaccovidlive-vaccovidlive-default/api/vaccovid-coronavirus-vaccine-and-treatment-tracker/")
 
     # Table
+    d = st.date_input("Select a date: ", datetime.today())
     st.header("COVID-19 Table:  " +
               str(city_data['data'][0]['region']['province']))
 
     data_table1 = pd.DataFrame(city_data['data'][0]['region']['cities'])
-
     st.write(data_table1)
-    st.empty()
 
+ 
+   
     # Map
     st.header(
         "Data Availability Map for Table [USA]")
@@ -169,8 +174,8 @@ def main():
     # Charts
     st.header("New Cases [USA]")
 
-    line_chart = pd.DataFrame(new_cases)
-    st.line_chart(line_chart)
+    area_chart = pd.DataFrame(new_cases)
+    st.area_chart(area_chart)
 
     st.header("New Deaths [USA]")
     bar_chart = pd.DataFrame(new_deaths)
