@@ -122,6 +122,21 @@ def main():
     with st.expander("More info", expanded=True):
         st.warning("Disclaimer: Data may be inaccurate.", icon="⚠️")
 
+        #radio button
+        option = st.radio( 
+        'Have you been recently affected by COVID 19?',
+        ('Yes', 'No', 'Already had COVID'))
+
+     #Here's what to do if you been affected:
+        if option == 'Yes':
+            st.write("If you or anyone you know has been affected, please folllow CDC guidelines and measures below.")
+
+        #Info box
+            st.info('Click here to see the CDC website: https://www.cdc.gov/coronavirus/2019-ncov/if-you-are-sick/steps-when-sick.html', icon="ℹ️")
+
+        else:
+            st.info('Click here to see the CDC website: https://www.cdc.gov/coronavirus/2019-ncov/if-you-are-sick/steps-when-sick.html', icon="ℹ️")
+
         # Load list of all the states in the US. Even including Puerto Rico (US Territory).
         try:
             states = np.genfromtxt('states.csv', dtype='str', delimiter=',')
