@@ -26,5 +26,5 @@ pip3 install -r requirements.txt
 
 or 
 ```
-pip3 install streamlit numpy pandas
+pip3 install streamlit numpy pandas jmespath plotly plotly.express
 ```

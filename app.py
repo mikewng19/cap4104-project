@@ -8,7 +8,7 @@ import plotly.express as px
 import jmespath
 from datetime import datetime, timedelta
 
-st.set_page_config(layout="wide", page_title="CAP 4104 Project")
+st.set_page_config(layout="wide", page_title="CAP 4104: Project #2")
 
 
 def get_csse_data(state, location_type, date):
@@ -79,7 +79,7 @@ def get_vaccovid_data(country):
 
 
 def process_csse_map(json, array, value):
-    # Possbile paths for world data.
+    # Possbile paths for getting data if jmsepath is used.
     # country = jmespath.search("data[*].region." + str(value), json)
     # cities = jmespath.search("data[*].region.cities[*]." + str(value), json)
     try:
@@ -106,10 +106,6 @@ def main():
     # Date is one day behind to prevent any errors.
     search_date = datetime.today() - timedelta(days=2)
     search_date = search_date.strftime('%Y-%m-%d')
-
-    # Call and store API response in variables
-    csse_map_data = get_csse_data(None, "country", None)
-    vaccovid_usa_data = get_vaccovid_data("USA")
 
     ###################### Streamlit ######################
     st.title("CAP 4104 Project")
@@ -161,8 +157,9 @@ def main():
     # Map
     with tab2:
         # Getting longitude and latitue for the map
-        latitude, longitude = [], []
+        csse_map_data = get_csse_data(None, "country", None)
 
+        latitude, longitude = [], []
         process_csse_map(csse_map_data, latitude, 'lat')
         process_csse_map(csse_map_data, longitude, 'long')
 
@@ -176,16 +173,16 @@ def main():
     with tab3:
         # Getting the US's past (API only returns around 29 days instead of 6 months.) of covid data.
         total_cases, total_deaths = [], []
-        new_cases, new_deaths = [], []
-        date = []
+
+        vaccovid_usa_data = get_vaccovid_data("USA")
 
         process_vaccovid(vaccovid_usa_data, total_cases, 'total_cases')
         process_vaccovid(vaccovid_usa_data, total_deaths, 'total_deaths')
-        process_vaccovid(vaccovid_usa_data, new_cases, 'new_cases')
-        process_vaccovid(vaccovid_usa_data, new_deaths, 'new_deaths')
-        process_vaccovid(vaccovid_usa_data, date, 'date')
+
+        vaccovid_usa_data = pd.DataFrame(vaccovid_usa_data)
 
         row_1, row_2 = st.columns((2))
+
         with row_1:
             st.header(" Total Cases [USA]: " + str(max(total_cases)))
         with row_2:
@@ -194,45 +191,56 @@ def main():
         st.warning(
             "Note: Vaccovid API is currently returning 28 days of data instead of 6 months of data!", icon="⚠️")
 
-        # Area chart
+        # Line chart
         if st.checkbox("Show Area Chart", value=True):
-            area_chart_options = st.multiselect(
-                'Select data to display on the area chart', ['New Cases', 'New Deaths'])
-            st.header("New Cases [USA]")
+            st.header("Line chart [USA]")
 
-            area_chart = pd.DataFrame(new_cases)
+            line_chart_options = st.multiselect(
+                'Select data to display on the area chart', ['new_cases', 'new_deaths'])
 
-            color = st.color_picker("Pick a color", "#FF4B4B")
-            fig = px.area(
-                area_chart,
-                x=date,
-                y=new_cases
+            color_cases = st.color_picker(
+                "Select color for new cases", '#FFFF00')
+            color_deaths = st.color_picker(
+                "Select color for new deaths", '#FF4B4B')
+
+            fig = px.line(
+                vaccovid_usa_data,
+                x='date',
+                y=line_chart_options,
+                color_discrete_map={
+                    'new_cases': color_deaths,
+                    'new_deaths': color_cases
+
+                }
             )
-            fig.update_traces(line_color=color)
             st.plotly_chart(fig, use_container_width=True)
+            if st.button("Open line chart in a new window"):
+
+                fig.show()
 
         # Bar chart
         if st.checkbox("Show Bar Chart", value=True):
-            bar_chart_options = st.multiselect('Select data to display on the bar chart', [
-                                               'New Cases', 'New Deaths'])
-            st.header("New Deaths [USA]")
+            st.header("Bar chart [USA]")
 
-            bar_chart = pd.DataFrame(new_deaths)
-            st.bar_chart(bar_chart)
+            bar_chart_options = st.radio('Select data to display on the bar chart',
+                                         ['new_deaths', 'new_cases'])
+            color_bar = st.color_picker("Pick a color", "#FF4B4B")
 
-            # bar_chart = px.bar(bar_chart, x=date, y=new_deaths)
-            # if st.checkbox("Go to Bar Graph"):
-            #     bar_chart.show()
+            fig_bar = px.bar(vaccovid_usa_data, x='date', y=bar_chart_options)
+            fig_bar.update_traces(marker_color=color_bar)
+            st.plotly_chart(fig_bar, use_container_width=True)
 
+            if st.button("Open Bar chart in a new window"):
+                fig_bar.show()
     # Credits
     with tab4:
         st.header("Team:")
-        st.subheader("Roberto Luna-Garcia: Area Chart [Widgets: Color picker]")
+        st.subheader("Roberto Luna-Garcia: Line chart [Widgets: Color picker]")
         st.subheader("Jenniffer Hierro Cruz: [Widget: Radio Button]  \n")
         st.subheader(
             "Michael Wong: API requests, API response processing, Button, Table, Map, Bar Chart, Checkbox, Feedback/Info messages, Page layout")
         st.subheader(
-            "[Widgets: Date selector, Selector box, Multi selector box]")
+            "[Widgets: Date selector, Selector box, Multi selector box, Color picker, Radio Button]")
 
         st.header("API's Used:")
         st.subheader(
