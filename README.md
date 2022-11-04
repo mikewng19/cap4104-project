@@ -3,9 +3,16 @@ A web application is an interactive computer program developed using web technol
 
 The goal of this project is to apply the Usability Goals and Design Principles learned in class into the development of a web application using Streamlit. The project needs to manipulate data requested through an API.
 
+This project uses Streamlit and data from RapidAPI to create a COVID-19 dashboard web application.
+
 ## Implementation
 - Python
 
+## API's Used
+COVID-19 Statistics (CSSE) by Axisbits: [COVID-19 Statistics](https://rapidapi.com/axisbits-axisbits-default/api/covid-19-statistics/)
+
+VACCOVID - coronavirus, vaccine and treatment tracker by vaccovidlive: [VACCOVID](https://rapidapi.com/vaccovidlive-vaccovidlive-default/api/vaccovid-coronavirus-vaccine-and-treatment-tracker/)
+   
 ## Requirements
 To run the application, make sure you have `python3` and `pip` installed.
 

@@ -1,4 +1,14 @@
-# Author: Michael Wong
+# Contributors:
+#   Michael Wong:
+#       API requests, API response processing, Button, Table, Map, Bar Chart, Checkbox, Feedback/Info messages, Page layout")
+#       [Widgets: Date selector, Selector box, Multi selector box, Color picker, Radio Button]")
+#
+#   Roberto Luna-Garcia:
+#       Line chart, Button, Checkbox [Widgets: Color picker]
+#
+#   Jenniffer Hierro Cruz:
+#       [Widget: Radio Button, Feedback/Info messages, Date selector]
+
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -12,7 +22,6 @@ st.set_page_config(layout="wide", page_title="CAP 4104: Project #2")
 
 
 def get_csse_data(state, location_type, date):
-    # Log: May implement an option to allow a user to specific a custom country.
     # API Used: https://rapidapi.com/axisbits-axisbits-default/api/covid-19-statistics/
     response = None
     error = False
@@ -46,7 +55,6 @@ def get_csse_data(state, location_type, date):
 
 
 def get_vaccovid_data(country):
-    # Log: May implement an option to allow a user to specific a custom country.
     # API Used: https://rapidapi.com/vaccovidlive-vaccovidlive-default/api/vaccovid-coronavirus-vaccine-and-treatment-tracker/
     # API only returns around 29 days instead of 6 months.
     response = None
@@ -103,11 +111,11 @@ def process_vaccovid(json, array, value):
 
 
 def main():
-    # Date is one day behind to prevent any errors.
+    # Date is two day behind to prevent any errors.
     search_date = datetime.today() - timedelta(days=2)
     search_date = search_date.strftime('%Y-%m-%d')
 
-    ###################### Streamlit ######################
+    # Streamlit
     st.title("CAP 4104 Project")
     st.header("Welcome to the COVID 19 Dashboard!")
 
@@ -235,8 +243,10 @@ def main():
     # Credits
     with tab4:
         st.header("Team:")
-        st.subheader("Roberto Luna-Garcia: Line chart [Widgets: Color picker]")
-        st.subheader("Jenniffer Hierro Cruz: [Widget: Radio Button]  \n")
+        st.subheader(
+            "Roberto Luna-Garcia: Line chart, Button, Checkbox [Widgets: Color picker]")
+        st.subheader(
+            "Jenniffer Hierro Cruz: [Widget: Radio Button, Feedback/Info messages, Date selector]  \n")
         st.subheader(
             "Michael Wong: API requests, API response processing, Button, Table, Map, Bar Chart, Checkbox, Feedback/Info messages, Page layout")
         st.subheader(
