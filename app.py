@@ -1,7 +1,7 @@
 # Contributors:
 #   Michael Wong:
-#       API requests, API response processing, Button, Table, Map, Bar Chart, Checkbox, Feedback/Info messages, Page layout")
-#       [Widgets: Date selector, Selector box, Multi selector box, Color picker, Radio Button]")
+#       API requests, API response processing, Button, Table, Map, Bar Chart, Checkbox, Feedback/Info messages, Page layout
+#       [Widgets: Date selector, Selector box, Multi selector box, Color picker, Radio Button]
 #
 #   Roberto Luna-Garcia:
 #       Line chart, Button, Checkbox [Widgets: Color picker]
@@ -25,6 +25,7 @@ def get_csse_data(state, location_type, date):
     # API Used: https://rapidapi.com/axisbits-axisbits-default/api/covid-19-statistics/
     response = None
     error = False
+
     url = "https://covid-19-statistics.p.rapidapi.com/reports"
 
     try:
@@ -80,7 +81,6 @@ def get_vaccovid_data(country):
                  str(response.status_code), icon="🚨")
 
     if not error:
-
         st.success("VACCOVID API Response: " +
                    str(response.status_code), icon="✅")
         return response.json()
@@ -97,17 +97,16 @@ def process_csse_map(json, array, value):
                     array.append(
                         float(json['data'][i]['region']['cities'][j][value]))
     except:
-        st.error('CSSE Data Map: Failed', icon="🚨")
+        st.error('CSSE Map Data: Failed to process data.', icon="🚨")
 
 
 def process_vaccovid(json, array, value):
-    if value == 'date':
-        for obj in json:
-            array.append(str(obj[value]))
-    else:
+    try:
         for obj in json:
             if(obj[value] is not None):
                 array.append(int(obj[value]))
+    except:
+        st.error('Vaccovid Data: Failed to process data.', icon="🚨")
 
 
 def main():
@@ -119,18 +118,9 @@ def main():
     st.title("CAP 4104 Project")
     st.header("Welcome to the COVID 19 Dashboard!")
 
+    # Info tab
     with st.expander("More info", expanded=True):
         st.warning("Disclaimer: Data may be inaccurate.", icon="⚠️")
-
-        if st.button("View API credits and Test API Status"):
-            st.write(
-                "COVID-19 Statistics (CSSE) by Axisbits:  \nhttps://rapidapi.com/axisbits-axisbits-default/api/covid-19-statistics/")
-            st.write("VACCOVID - coronavirus, vaccine and treatment tracker by vaccovidlive:  \nhttps://rapidapi.com/vaccovidlive-vaccovidlive-default/api/vaccovid-coronavirus-vaccine-and-treatment-tracker/")
-            st.write("API Status Codes:  \nInformational responses (100 – 199)  \nSuccessful responses (200 – 299)  \nRedirection messages (300 – 399)  \nClient error responses (400 – 499)  \nServer error responses (500 – 599)")
-
-            csse_test = get_csse_data(None, "country", None)
-            vaccovid_test = get_vaccovid_data("USA")
-            del csse_test, vaccovid_test
 
         # Load list of all the states in the US. Even including Puerto Rico (US Territory).
         try:
@@ -138,10 +128,11 @@ def main():
         except:
             st.error('Error: Failed to load states.txt', icon="🚨")
 
-    tab1, tab2, tab3, tab4 = st.tabs(["Table", "Map", "Charts", "Credits"])
+    table_tab, map_tab, charts_tab, credits_tab = st.tabs(
+        ["Table", "Map", "Charts", "Credits"])
 
     # Table
-    with tab1:
+    with table_tab:
         st.info(
             'The API refreshes at certian times: The starting date is set 2 days behind to prevent errors. The starting date may still be invalid.', icon="ℹ️")
         data_table1 = None
@@ -162,8 +153,9 @@ def main():
             # Prevents displaying a small "None" text if no data exists."
             if data_table1 is not None:
                 st.table(data_table1)
+
     # Map
-    with tab2:
+    with map_tab:
         # Getting longitude and latitue for the map
         csse_map_data = get_csse_data(None, "country", None)
 
@@ -178,7 +170,7 @@ def main():
         st.map(df_map)
 
     # Charts
-    with tab3:
+    with charts_tab:
         # Getting the US's past (API only returns around 29 days instead of 6 months.) of covid data.
         total_cases, total_deaths = [], []
 
@@ -189,35 +181,35 @@ def main():
 
         vaccovid_usa_data = pd.DataFrame(vaccovid_usa_data)
 
-        row_1, row_2 = st.columns((2))
+        cases_column, death_columns = st.columns((2))
 
-        with row_1:
-            st.header(" Total Cases [USA]: " + str(max(total_cases)))
-        with row_2:
-            st.header(" Total Deaths [USA]: " + str(max(total_deaths)))
+        with cases_column:
+            st.header("Total Cases [USA]: " + str(max(total_cases)))
+        with death_columns:
+            st.header("Total Deaths [USA]: " + str(max(total_deaths)))
 
         st.warning(
-            "Note: Vaccovid API is currently returning 28 days of data instead of 6 months of data!", icon="⚠️")
+            "Note: Vaccovid API may not be working as intended (Normal Response: Past 6 months of data).", icon="⚠️")
 
         # Line chart
         if st.checkbox("Show Area Chart", value=True):
             st.header("Line chart [USA]")
 
             line_chart_options = st.multiselect(
-                'Select data to display on the area chart', ['new_cases', 'new_deaths'])
+                'Select data to display on the area chart', ['new_cases', 'new_deaths'], default='new_cases')
 
             color_cases = st.color_picker(
-                "Select color for new cases", '#FFFF00')
+                "Select a color for new_cases", '#FFFF00')
             color_deaths = st.color_picker(
-                "Select color for new deaths", '#FF4B4B')
+                "Select a color for new_deaths", '#FF4B4B')
 
             fig = px.line(
                 vaccovid_usa_data,
                 x='date',
                 y=line_chart_options,
                 color_discrete_map={
-                    'new_cases': color_deaths,
-                    'new_deaths': color_cases
+                    'new_cases': color_cases,
+                    'new_deaths': color_deaths
 
                 }
             )
@@ -231,17 +223,20 @@ def main():
             st.header("Bar chart [USA]")
 
             bar_chart_options = st.radio('Select data to display on the bar chart',
-                                         ['new_deaths', 'new_cases'])
-            color_bar = st.color_picker("Pick a color", "#FF4B4B")
+                                         ['new_cases', 'new_deaths'])
+            color_bar = st.color_picker(
+                "Select a color for the bar chart", "#FF4B4B")
 
             fig_bar = px.bar(vaccovid_usa_data, x='date', y=bar_chart_options)
             fig_bar.update_traces(marker_color=color_bar)
+
             st.plotly_chart(fig_bar, use_container_width=True)
 
             if st.button("Open Bar chart in a new window"):
                 fig_bar.show()
+
     # Credits
-    with tab4:
+    with credits_tab:
         st.header("Team:")
         st.subheader(
             "Jenniffer Hierro Cruz: [Widget: Radio Button, Feedback/Info messages, Date selector]  \n")
@@ -256,6 +251,13 @@ def main():
         st.subheader(
             "COVID-19 Statistics (CSSE) by Axisbits:  \nhttps://rapidapi.com/axisbits-axisbits-default/api/covid-19-statistics/")
         st.subheader("VACCOVID - coronavirus, vaccine and treatment tracker by vaccovidlive:  \nhttps://rapidapi.com/vaccovidlive-vaccovidlive-default/api/vaccovid-coronavirus-vaccine-and-treatment-tracker/")
+
+        if st.button("Test API Status"):
+            st.write("API Status Codes:  \nInformational responses (100 – 199)  \nSuccessful responses (200 – 299)  \nRedirection messages (300 – 399)  \nClient error responses (400 – 499)  \nServer error responses (500 – 599)")
+
+            csse_test = get_csse_data(None, "country", None)
+            vaccovid_test = get_vaccovid_data("USA")
+            del csse_test, vaccovid_test
 
 
 if __name__ == '__main__':
