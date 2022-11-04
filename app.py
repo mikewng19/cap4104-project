@@ -158,59 +158,62 @@ def main():
         states = np.genfromtxt('states.csv', dtype='str', delimiter=',')
     except:
         st.error('Error: Failed to load states.txt', icon="🚨")
+
     # Button
     if st.button("Show API's Used"):
         st.write("COVID-19 Statistics by Axisbits:  \nhttps://rapidapi.com/axisbits-axisbits-default/api/covid-19-statistics/")
         st.write("VACCOVID - coronavirus, vaccine and treatment tracker by vaccovidlive:  \nhttps://rapidapi.com/vaccovidlive-vaccovidlive-default/api/vaccovid-coronavirus-vaccine-and-treatment-tracker/")
 
     # Table
-    d = st.date_input("Select a date: ", datetime.today() - timedelta(days=1))
-    option = st.selectbox("Select a State/Territory: ", states)
-    city_data = get_csse_data(option, "state", d)
-    data_table1 = None
+    if st.checkbox("Show Table", value=True):
+        d = st.date_input("Select a date: ",
+                          datetime.today() - timedelta(days=1))
+        option = st.selectbox("Select a State/Territory: ", states)
+        city_data = get_csse_data(option, "state", d)
+        data_table1 = None
 
-    try:
-        st.header("COVID-19 Table:  " +
-                  str(city_data['data'][0]['region']['province']))
-        data_table1 = pd.DataFrame(city_data['data'][0]['region']['cities'])
-    except:
-        st.error('Error: No data exists for this date.', icon="🚨")
-    finally:
-        st.write(data_table1)
+        try:
+            st.header("COVID-19 Table:  " +
+                      str(city_data['data'][0]['region']['province']))
+            data_table1 = pd.DataFrame(
+                city_data['data'][0]['region']['cities'])
+        except:
+            st.error('Error: No data exists for this date.', icon="🚨")
+        finally:
+            st.write(data_table1)
 
     # Map
-    st.header(
-        "Data Availability Map for Table [USA]")
-    df_map = pd.DataFrame(cords, columns=['latitude', 'longitude'])
-    st.map(df_map)
+    if st.checkbox("Show Map", value=True):
+        st.header(
+            "Data Availability Map for Table [USA]")
+        df_map = pd.DataFrame(cords, columns=['latitude', 'longitude'])
+        st.map(df_map)
 
     # Charts
-    st.header("New Cases [USA]")
+    # Area chart
+    if st.checkbox("Show Area Chart", value=True):
+        st.header("New Cases [USA]")
+        area_chart = pd.DataFrame(new_cases)
 
-    line_chart = pd.DataFrame(new_cases)
-    st.line_chart(line_chart)
+        color = st.color_picker("Pick a color", "#FF4B4B")
+        fig = px.area(
+            area_chart,
+            x=date,
+            y=new_cases
+        )
+        fig.update_traces(line_color=color)
+        st.plotly_chart(fig, use_container_width=True)
 
-    color = st.color_picker("Pick a color", "#00f900")
-    fig = px.line(
-        line_chart,
-        x=date,
-        y=new_cases
-    )
-    fig.update_traces(line_color=color)
-    st.plotly_chart(fig, use_container_width=True)
+    # Bar chart
+    if st.checkbox("Show Bar Chart", value=True):
+        st.header("New Deaths [USA]")
 
-    # Charts
-    st.header("New Cases [USA]")
-    area_chart = pd.DataFrame(new_cases)
-    st.area_chart(area_chart)
+        bar_chart = pd.DataFrame(new_deaths)
+        st.bar_chart(bar_chart)
 
-    st.header("New Deaths [USA]")
-    bar_chart = pd.DataFrame(new_deaths)
-    st.bar_chart(bar_chart)
-    
-    bar_chart = px.bar(bar_chart, x=date, y=new_deaths)
-    if st.checkbox("Go to Bar Graph"):
-        bar_chart.show()
+        # bar_chart = px.bar(bar_chart, x=date, y=new_deaths)
+        # if st.checkbox("Go to Bar Graph"):
+        #     bar_chart.show()
 
 
 if __name__ == '__main__':
