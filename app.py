@@ -244,9 +244,9 @@ def main():
     with tab4:
         st.header("Team:")
         st.subheader(
-            "Roberto Luna-Garcia: Line chart, Button, Checkbox [Widgets: Color picker]")
-        st.subheader(
             "Jenniffer Hierro Cruz: [Widget: Radio Button, Feedback/Info messages, Date selector]  \n")
+        st.subheader(
+            "Roberto Luna-Garcia: Line chart, Button, Checkbox [Widgets: Color picker]")
         st.subheader(
             "Michael Wong: API requests, API response processing, Button, Table, Map, Bar Chart, Checkbox, Feedback/Info messages, Page layout")
         st.subheader(
