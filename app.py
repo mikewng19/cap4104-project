@@ -86,7 +86,7 @@ def get_vaccovid_data(country):
         return response.json()
 
 
-def process_csse_map(json, array, value):
+def process_csse_map_data(json, array, value):
     # Possbile paths for getting data if jmsepath is used.
     # country = jmespath.search("data[*].region." + str(value), json)
     # cities = jmespath.search("data[*].region.cities[*]." + str(value), json)
@@ -100,7 +100,7 @@ def process_csse_map(json, array, value):
         st.error('CSSE Map Data: Failed to process data.', icon="🚨")
 
 
-def process_vaccovid(json, array, value):
+def process_vaccovid_data(json, array, value):
     try:
         for obj in json:
             if(obj[value] is not None):
@@ -160,8 +160,8 @@ def main():
         csse_map_data = get_csse_data(None, "country", None)
 
         latitude, longitude = [], []
-        process_csse_map(csse_map_data, latitude, 'lat')
-        process_csse_map(csse_map_data, longitude, 'long')
+        process_csse_map_data(csse_map_data, latitude, 'lat')
+        process_csse_map_data(csse_map_data, longitude, 'long')
 
         cords = np.column_stack((latitude, longitude))
         st.header(
@@ -176,8 +176,8 @@ def main():
 
         vaccovid_usa_data = get_vaccovid_data("USA")
 
-        process_vaccovid(vaccovid_usa_data, total_cases, 'total_cases')
-        process_vaccovid(vaccovid_usa_data, total_deaths, 'total_deaths')
+        process_vaccovid_data(vaccovid_usa_data, total_cases, 'total_cases')
+        process_vaccovid_data(vaccovid_usa_data, total_deaths, 'total_deaths')
 
         vaccovid_usa_data = pd.DataFrame(vaccovid_usa_data)
 
