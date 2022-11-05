@@ -7,7 +7,7 @@
 #       Line chart, Button, Checkbox [Widgets: Color picker]
 #
 #   Jenniffer Hierro Cruz:
-#       [Widget: Radio Button, Feedback/Info messages, Date selector]
+#       Feedback/Info messages [Widget: Radio Button, Date selector]
 
 import streamlit as st
 import pandas as pd
@@ -262,7 +262,7 @@ def main():
         with st.expander("Show Team", expanded=True):
             st.header("Team:")
             st.subheader(
-                "Jenniffer Hierro Cruz: [Widget: Radio Button, Feedback/Info messages, Date selector]  \n")
+                "Jenniffer Hierro Cruz: Feedback/Info messages [Widget: Radio Button, Date selector]  \n")
             st.subheader(
                 "Roberto Luna-Garcia: Line chart, Button, Checkbox [Widgets: Color picker]")
             st.subheader(
