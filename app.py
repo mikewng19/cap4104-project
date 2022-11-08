@@ -262,9 +262,9 @@ def main():
         with st.expander("Show Team", expanded=True):
             st.header("Team:")
             st.subheader(
-                "Jenniffer Hierro Cruz: Feedback/Info messages [Widget: Radio Button, Date selector]  \n")
+                "Jenniffer Hierro Cruz: Feedback/Info messages [Widget: Radio Button]")
             st.subheader(
-                "Roberto Luna-Garcia: Line chart, Button, Checkbox [Widgets: Color picker]")
+                "Roberto Luna-Garcia: Line chart [Widgets: Color picker]")
             st.subheader(
                 "Michael Wong: API requests, API response processing, Button, Table, Map, Bar Chart, Checkbox, Feedback/Info messages, Page layout")
             st.subheader(
