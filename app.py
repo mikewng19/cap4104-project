@@ -4,10 +4,10 @@
 #       [Widgets: Date selector, Selector box, Multi selector box, Color picker, Radio Button]
 #
 #   Roberto Luna-Garcia:
-#       Line chart, Button, Checkbox [Widgets: Color picker]
+#       Line chart [Widgets: Color picker]
 #
 #   Jenniffer Hierro Cruz:
-#       Feedback/Info messages [Widget: Radio Button, Date selector]
+#       Feedback/Info messages [Widget: Radio Button]
 
 import streamlit as st
 import pandas as pd
