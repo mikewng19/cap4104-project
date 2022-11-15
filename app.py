@@ -80,7 +80,6 @@ def get_vaccovid_data(country):
         response = requests.request("GET", url, headers=headers)
     except:
         try:
-
             error = True
             st.error("VACCOVID API Response: " +
                     str(response.status_code), icon="🚨")
