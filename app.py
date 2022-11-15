@@ -47,8 +47,11 @@ def get_csse_data(state, location_type, date):
         response = requests.request(
             "GET", url, headers=headers, params=querystring)
     except:
-        st.error("CSSE API Response: " + str(response.status_code), icon="🚨")
-        error = True
+        try:
+            st.error("CSSE API Response: " + str(response.status_code), icon="🚨")
+            error = True
+        except:
+            st.error("CSSE API Response: API may be down or unresponsive.", icon="🚨")
 
     if not error:
         st.success("CSSE API Response: " + str(response.status_code), icon="✅")
@@ -76,9 +79,13 @@ def get_vaccovid_data(country):
 
         response = requests.request("GET", url, headers=headers)
     except:
-        error = True
-        st.error("VACCOVID API Response: " +
-                 str(response.status_code), icon="🚨")
+        try:
+
+            error = True
+            st.error("VACCOVID API Response: " +
+                    str(response.status_code), icon="🚨")
+        except:
+            st.error("VACCOVID API Response: API may be down or unresponsive.", icon="🚨")
 
     if not error:
         st.success("VACCOVID API Response: " +
@@ -111,8 +118,8 @@ def process_vaccovid_data(json, array, value):
 
 def main():
     # Streamlit
-    st.title("CAP 4104 Project")
-    st.header("Welcome to the COVID 19 Dashboard!")
+    st.title("CAP 4104 Project #2")
+    st.header("Welcome to the COVID-19 Dashboard!")
 
     # Info tab
     with st.expander("More info", expanded=True):
@@ -140,8 +147,7 @@ def main():
     # Table
     with table_tab:
         data_table1 = None
-        
-        
+
         with st.expander("Show Selection Options", expanded=True):
             st.info(
                 'The API refreshes at certian times: The starting date is set 2 days behind to prevent errors. The starting date may still be invalid.', icon="ℹ️")
@@ -177,8 +183,10 @@ def main():
         cords = np.column_stack((latitude, longitude))
 
         st.header("Data Availability Map")
-        st.info('Map data source: COVID-19 Statistics (CSSE) by Axisbits', icon="ℹ️") 
-        st.info('This map displays the data availability for the table.', icon="ℹ️")
+        with st.expander("Show Map Source and Info", expanded=True):
+            
+            st.info('Map data source: COVID-19 Statistics (CSSE) by Axisbits', icon="ℹ️") 
+            st.info('This map displays the data availability for the table.', icon="ℹ️")
 
         df_map = pd.DataFrame(cords, columns=['latitude', 'longitude'])
         st.map(df_map)
@@ -194,9 +202,10 @@ def main():
         process_vaccovid_data(vaccovid_usa_data, total_deaths, 'total_deaths')
 
         vaccovid_usa_data = pd.DataFrame(vaccovid_usa_data)
-        st.info('Chart data source: VACCOVID - coronavirus, vaccine and treatment tracker by vaccovidlive', icon="ℹ️")
-        st.warning(
-            "Note: Vaccovid API may not be working as intended (Normal Response: Past 6 months of data).", icon="⚠️")
+        with st.expander("Show Chart Source and Info", expanded=True):
+            st.info('Chart data source: VACCOVID - coronavirus, vaccine and treatment tracker by vaccovidlive', icon="ℹ️")
+            st.warning(
+                "Note: Vaccovid API may not be working as intended (Normal Response: Past 6 months of data).", icon="⚠️")
 
         cases_column, death_columns = st.columns((2))
         with cases_column:
