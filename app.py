@@ -48,9 +48,10 @@ def get_csse_data(state, location_type, date):
             "GET", url, headers=headers, params=querystring)
     except:
         try:
-            st.error("CSSE API Response: " + str(response.status_code), icon="🚨")
             error = True
+            st.error("CSSE API Response: " + str(response.status_code), icon="🚨")
         except:
+            error = True
             st.error("CSSE API Response: API may be down or unresponsive.", icon="🚨")
 
     if not error:
@@ -84,6 +85,7 @@ def get_vaccovid_data(country):
             st.error("VACCOVID API Response: " +
                     str(response.status_code), icon="🚨")
         except:
+            error = True
             st.error("VACCOVID API Response: API may be down or unresponsive.", icon="🚨")
 
     if not error:
