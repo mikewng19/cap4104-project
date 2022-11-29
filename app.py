@@ -20,7 +20,7 @@ from datetime import datetime, timedelta
 
 st.set_page_config(layout="wide", page_title="CAP 4104: Project #2")
 
-
+@st.cache(suppress_st_warning=True)
 def get_csse_data(state, location_type, date):
     # API Used: https://rapidapi.com/axisbits-axisbits-default/api/covid-19-statistics/
     response = None
@@ -58,7 +58,7 @@ def get_csse_data(state, location_type, date):
         st.success("CSSE API Response: " + str(response.status_code), icon="✅")
         return response.json()
 
-
+@st.cache(suppress_st_warning=True)
 def get_vaccovid_data(country):
     # API Used: https://rapidapi.com/vaccovidlive-vaccovidlive-default/api/vaccovid-coronavirus-vaccine-and-treatment-tracker/
     # API only returns around 29 days instead of 6 months.
@@ -93,7 +93,6 @@ def get_vaccovid_data(country):
                    str(response.status_code), icon="✅")
         return response.json()
 
-
 def process_csse_map_data(json, array, value):
     # Possbile paths for getting data if jmsepath is used.
     # country = jmespath.search("data[*].region." + str(value), json)
@@ -107,7 +106,6 @@ def process_csse_map_data(json, array, value):
     except:
         st.error('CSSE Map Data: Failed to process data.', icon="🚨")
 
-
 def process_vaccovid_data(json, array, value):
     try:
         for obj in json:
@@ -115,7 +113,6 @@ def process_vaccovid_data(json, array, value):
                 array.append(int(obj[value]))
     except:
         st.error('Vaccovid Data: Failed to process data.', icon="🚨")
-
 
 def main():
     # Streamlit
@@ -291,7 +288,6 @@ def main():
                 csse_test = get_csse_data(None, "country", None)
                 vaccovid_test = get_vaccovid_data("USA")
                 del csse_test, vaccovid_test
-
 
 if __name__ == '__main__':
     main()
