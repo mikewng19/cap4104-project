@@ -35,3 +35,11 @@ or
 ```
 pip3 install streamlit numpy pandas jmespath plotly plotly.express
 ```
+
+## Run the web application
+To run the web application:
+
+Type the following command after installing the requirements.
+```
+streamlit run app.py
+```
