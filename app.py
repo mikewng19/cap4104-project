@@ -159,7 +159,7 @@ def display_table():
         data_table1 = pd.DataFrame(
             city_data["data"][0]["region"]["cities"])
     except:
-        st.error("Error: No data exists for this date.", icon="🚨")
+        st.error("Error: No data exists for this date or CSSE API may be experiencing issues.", icon="🚨")
     finally:
         # Prevents displaying a small "None" text if no data exists."
         if data_table1 is not None:
