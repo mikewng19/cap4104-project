@@ -20,6 +20,11 @@ from datetime import datetime, timedelta
 
 st.set_page_config(layout="wide", page_title="CAP 4104: Project #2")
 
+def get_api_key():
+        temp = json.load(open("api_key.json"))  # dictionary
+        api_key = temp["api_key"]  # string
+        return api_key
+
 @st.cache(suppress_st_warning=True)
 def get_csse_data(state, location_type, date):
     # API Used: https://rapidapi.com/axisbits-axisbits-default/api/covid-19-statistics/
@@ -27,13 +32,10 @@ def get_csse_data(state, location_type, date):
     error = False
 
     url = "https://covid-19-statistics.p.rapidapi.com/reports"
-
+    
     try:
         # Load API key
-        csse = open("csse_api.json")
-        csse = json.load(csse)  # dictionary
-        api_key = csse["api_key"]  # string
-
+        api_key = get_api_key()
         headers = {
             "X-RapidAPI-Key": api_key,
             "X-RapidAPI-Host": "covid-19-statistics.p.rapidapi.com"
@@ -72,9 +74,8 @@ def get_vaccovid_data(country):
 
     try:
         # Load API key
-        vaccovid = open("vaccovid_api.json")
-        vaccovid = json.load(vaccovid)  # dictionary
-        api_key = vaccovid["api_key"]  # string
+        api_key = get_api_key()
+
         headers = {
             "X-RapidAPI-Key": api_key,
             "X-RapidAPI-Host": "vaccovid-coronavirus-vaccine-and-treatment-tracker.p.rapidapi.com"
@@ -150,20 +151,21 @@ def display_table():
 
     city_data = get_csse_data(state_option, "state", date)
 
-    try:
-        st.info(
-            "Table data source: COVID-19 Statistics (CSSE) by Axisbits", icon="ℹ️")
-        st.header("Showing results for:  " +
-                    str(city_data["data"][0]["region"]["province"]) + "'s Cities")
+    with st.expander("Show Table", expanded=True):
+        try:
+            st.info(
+                "Table data source: COVID-19 Statistics (CSSE) by Axisbits", icon="ℹ️")
+            st.header("Showing results for:  " +
+                        str(city_data["data"][0]["region"]["province"]) + "'s Cities")
 
-        data_table1 = pd.DataFrame(
-            city_data["data"][0]["region"]["cities"])
-    except:
-        st.error("Error: No data exists for this date or CSSE API may be experiencing issues.", icon="🚨")
-    finally:
-        # Prevents displaying a small "None" text if no data exists."
-        if data_table1 is not None:
-            st.table(data_table1)  
+            data_table1 = pd.DataFrame(
+                city_data["data"][0]["region"]["cities"])
+        except:
+            st.error("Error: No data exists for this date or CSSE API may be experiencing issues.", icon="🚨")
+        finally:
+            # Prevents displaying a small "None" text if no data exists."
+            if data_table1 is not None:
+                st.table(data_table1)  
 
 def display_map():
     try:
@@ -288,12 +290,8 @@ def display_credits():
             "[Table and Map]:  \nCOVID-19 Statistics (CSSE) by Axisbits:  \nhttps://rapidapi.com/axisbits-axisbits-default/api/covid-19-statistics/")
         st.subheader("[Charts]:  \nVACCOVID - coronavirus, vaccine and treatment tracker by vaccovidlive:  \nhttps://rapidapi.com/vaccovidlive-vaccovidlive-default/api/vaccovid-coronavirus-vaccine-and-treatment-tracker/")
 
-        if st.button("Test API Status"):
-            st.write("API Status Codes:  \nInformational responses (100 – 199)  \nSuccessful responses (200 – 299)  \nRedirection messages (300 – 399)  \nClient error responses (400 – 499)  \nServer error responses (500 – 599)")
-
-            csse_test = get_csse_data(None, "country", None)
-            vaccovid_test = get_vaccovid_data("USA")
-            del csse_test, vaccovid_test
+        if st.button("Show API Status Codes"):
+                st.write("API Status Codes:  \nInformational responses (100 – 199)  \nSuccessful responses (200 – 299)  \nRedirection messages (300 – 399)  \nClient error responses (400 – 499)  \nServer error responses (500 – 599)")
 
 def main():
     # Streamlit

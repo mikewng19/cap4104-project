@@ -12,9 +12,22 @@ This project uses Streamlit and data from RapidAPI to create a COVID-19 dashboar
 COVID-19 Statistics (CSSE) by Axisbits: [COVID-19 Statistics](https://rapidapi.com/axisbits-axisbits-default/api/covid-19-statistics/)
 
 VACCOVID - coronavirus, vaccine and treatment tracker by vaccovidlive: [VACCOVID](https://rapidapi.com/vaccovidlive-vaccovidlive-default/api/vaccovid-coronavirus-vaccine-and-treatment-tracker/)
-   
+
+## API Key
+In order to run this program, a user must sign up for an API key from one of the two API's used above (both API'S use the same key).
+
+After signing up for an API key, create a JSON file named `api_key.json`.
+
+After creating the JSON file, insert this field and API key that was generated.
+
+```
+}
+    "api_key": "<INSERT API KEY HERE>" 
+}
+```
+
 ## Requirements
-To run the application, make sure you have `python3` and `pip` installed.
+To run the application, make sure you have an API key, `python3`, and `pip` installed.
 
 All dependencies/requirements are in the requirements.txt file.
 
